@@ -1,23 +1,20 @@
 1. Introduction
-This study analyzes the street network of King's Cross, London, using a 2000m radius. The research explores how street centrality affects urban accessibility and retail distribution. The key questions addressed are:
 
-How do closeness and betweenness centrality reflect the urban structure of King’s Cross?
+This report analyses the street network in King's Cross, London. The area covers a 2000m radius. The study explores how street centrality affects urban accessibility and retail distribution. The key research questions are:
 
-What is the relationship between retail locations and tube stations?
-These analyses provide insights into optimal retail locations and pedestrian movement in the study area.
+How do different streets connect to each other, and how does this affect movement?
+
+Is there a link between where shops are and how close they are to tube stations?
+
+By looking at these, we can see how people move in the area and where shops might do well.
 
 2. Dataset and Neighbourhood
 
-Study Area: King's Cross, London, chosen for its mixed land use and high connectivity.
-
-Data Source: OpenStreetMap (OSM) data accessed via OSMnx.
-
-Processing: Data retrieved and analyzed using Python, NetworkX, and GeoPandas.
+The study focuses on King's Cross, a busy area with many shops, offices, and transport links. The data comes from OpenStreetMap (OSM) and was collected using OSMnx. The data includes street layouts, shop locations, and tube station positions. 
 
 3. Analysis and Visualisation
 
 3.1 Data Acquisition
-The street network data for King's Cross was obtained using OSMnx, allowing for the extraction of road networks within a 2000m radius. Retail locations and tube station data were sourced from OpenStreetMap to ensure comprehensive spatial coverage. The data underwent processing, which included filtering, cleaning, and structuring to maintain accuracy and relevance for subsequent analysis.
 
 
 ```python
@@ -26,32 +23,32 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import os
 
-# 选择 King’s Cross 作为研究区域
+# Choose King’s Cross as research area
 address = "King's Cross Station, London, UK"
-graphml_file = "kings_cross_graph.graphml"  # 文件名
+graphml_file = "kings_cross_graph.graphml"
 
-# 检查文件是否存在，如果存在则直接加载，否则下载
+# Check whether the file exists, if it does, load it directly, otherwise download it
 if os.path.exists(graphml_file):
     G = ox.load_graphml(graphml_file)
 else:
     G = ox.graph_from_address(address, dist=2000, network_type="walk")
 
-    # 保存为 GraphML 文件，避免下次重新下载
+    # Save as GraphML file
     ox.save_graphml(G, graphml_file)
 
-# 绘制街道网络
+# Plot the street network map
 fig, ax = ox.plot_graph(G, node_size=10, edge_linewidth=0.5, bgcolor='black')
-
 ```
 
 
     
-![png](formative%20assessment_files/formative%20assessment_3_0.png)
+![png](output_3_0.png)
     
 
 
 3.2 Closeness Centrality
-Closeness centrality measures the ease of reaching all other nodes in the network. Higher values indicate more accessible locations within the street network, making these areas more pedestrian-friendly. By visualizing closeness centrality, key zones that facilitate efficient movement can be identified, providing insights into pedestrian accessibility and potential areas for commercial development.
+
+Closeness centrality measures how easily a place connects to other places. If a street has a high score, it means people can get to many other streets quickly. The results show which areas are easy to reach. These places are likely to have a lot of foot traffic, making them good for businesses.
 
 
 ```python
@@ -59,12 +56,12 @@ import osmnx as ox
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
-import pickle  # 用于存储计算结果
+import pickle
 
-# 定义存储文件路径
+# Define the path to the storage file
 closeness_file = "closeness_centrality.pkl"
 
-# 计算 & 读取 Closeness Centrality**
+# Calculate & read Closeness Centrality
 try:
     with open(closeness_file, "rb") as f:
         closeness_centrality = pickle.load(f)
@@ -72,17 +69,17 @@ try:
 except FileNotFoundError:
     closeness_centrality = nx.closeness_centrality(G)
 
-    # 保存计算结果
+    # Save the calculate result
     with open(closeness_file, "wb") as f:
         pickle.dump(closeness_centrality, f)
 
-# 获取所有节点的颜色（根据 closeness 值进行颜色映射）
+# Gets the colour of all nodes
 nc_closeness = [closeness_centrality[node] for node in G.nodes()]
 norm_closeness = plt.Normalize(vmin=min(nc_closeness), vmax=max(nc_closeness))
 cmap_closeness = plt.colormaps.get_cmap("coolwarm")
 node_colors_closeness = [cmap_closeness(norm_closeness(value)) for value in nc_closeness]
 
-# 绘制 Closeness Centrality 可视化
+# Plot Closeness Centrality Map
 fig, ax = ox.plot_graph(
     G, 
     node_color=node_colors_closeness, 
@@ -90,17 +87,17 @@ fig, ax = ox.plot_graph(
     edge_linewidth=0.5, 
     bgcolor="white"
 )
-
 ```
 
 
     
-![png](formative%20assessment_files/formative%20assessment_5_0.png)
+![png](output_5_0.png)
     
 
 
 3.3 Betweenness Centrality
-Betweenness centrality measures how frequently a street segment is used as part of the shortest path between multiple locations. Streets with high betweenness act as primary traffic corridors, channeling significant pedestrian and vehicular movement. Identifying these key streets helps in understanding movement patterns and highlights critical infrastructure that supports urban mobility in King's Cross.
+
+Betweenness centrality shows how often a street is used as a shortcut. If a street has a high score, it means many people pass through it. These streets act like main routes that help people move around the area. Knowing this helps identify which streets are the busiest and most important.
 
 
 ```python
@@ -108,49 +105,48 @@ import osmnx as ox
 import networkx as nx
 import matplotlib.pyplot as plt
 import numpy as np
-import pickle  # 用于保存 & 读取计算结果
+import pickle 
 
-# 定义文件路径
 betweenness_file = "betweenness_centrality.pkl"
 
 try:
-    # 尝试加载已经计算好的 Betweenness Centrality
+    # Try to load the already calculated Betweenness Centrality
     with open(betweenness_file, "rb") as f:
         betweenness_centrality = pickle.load(f)
 
 except FileNotFoundError:
-    # 计算 Betweenness Centrality（可能需要几分钟）
+    # Calculate Betweenness Centrality
     betweenness_centrality = nx.betweenness_centrality(G, weight="length", normalized=True)
 
-    # 保存计算结果
+    # Save the calculate result
     with open(betweenness_file, "wb") as f:
         pickle.dump(betweenness_centrality, f)
 
-# 获取所有节点的颜色（根据 betweenness 值进行颜色映射）
+# Gets the colour of all nodes
 nc = [betweenness_centrality[node] for node in G.nodes()]
-norm = plt.Normalize(vmin=min(nc), vmax=max(nc))  # 归一化
-cmap = plt.colormaps.get_cmap("inferno")  # Matplotlib 3.7+ 兼容
+norm = plt.Normalize(vmin=min(nc), vmax=max(nc)) 
+cmap = plt.colormaps.get_cmap("inferno")  
 node_colors = [cmap(norm(value)) for value in nc]
 
-# 绘制 Betweenness Centrality 可视化
+# Plot Betweenness Centrality Map
 fig, ax = ox.plot_graph(
     G, 
-    node_color=node_colors,  # 颜色
+    node_color=node_colors, 
     node_size=20, 
     edge_linewidth=0.5, 
     bgcolor="white"
 )
-
 ```
 
 
     
-![png](formative%20assessment_files/formative%20assessment_7_0.png)
+![png](output_7_0.png)
     
 
 
 3.4 Relationship Between Retail Locations and Tube Stations
-The spatial distribution of retail locations in King's Cross was analyzed in relation to tube stations to assess whether proximity to high-accessibility transit points influences retail density. The findings indicate that retail establishments tend to cluster near tube stations, suggesting that public transport accessibility plays a key role in shaping commercial activity. These insights contribute to urban planning strategies aimed at optimizing commercial development in high-footfall areas.
+
+The study also looks at where shops are and how close they are to tube stations. The results show that many shops are near stations. This suggests that businesses prefer to be close to public transport, where there are more people. The findings can help in planning where to open new shops.
 
 
 ```python
@@ -161,86 +157,75 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 
-# 研究区域
 address = "King's Cross Station, London, UK"
 
-# **加载或获取 POI 数据**
+# Load or get POI data
 poi_file = "pois.pkl"
 
 if os.path.exists(poi_file):
     with open(poi_file, "rb") as f:
         pois = pickle.load(f)
-    print("✅ 读取已有的 POI 数据")
 else:
-    # 🚇 获取地铁站数据
+    # Get tube station data
     tube_tags = {"public_transport": "station"}
     tube_stations = ox.features_from_address(address, tube_tags, dist=2000)
 
-    # 🏪 获取商店数据
+    # Get retail location data
     shop_tags = {"shop": True}
     shops = ox.features_from_address(address, shop_tags, dist=2000)
 
-    # 存储数据
+    # Save data
     pois = {"tube_stations": tube_stations, "shops": shops}
     with open(poi_file, "wb") as f:
         pickle.dump(pois, f)
-    print("✅ POI 数据获取完成并保存")
 
-# 解包 POI 数据
+# Unpack POI data
 tube_stations, shops = pois["tube_stations"], pois["shops"]
 
-# **绘制 POI 数据**
+# Plot POI data
 fig, ax = plt.subplots(figsize=(10, 10))
 
-# 画出街道网络
+# Plot street network
 ox.plot_graph(G, ax=ax, node_size=10, edge_linewidth=0.5, bgcolor="white", show=False)
 
-# 画出地铁站（确保不为空）
+# Plot tube stations
 if len(tube_stations) > 0:
     tube_stations.plot(ax=ax, color="blue", markersize=50)
 
-# 画出商店（确保不为空）
+# Plot retail locations
 if len(shops) > 0:
     shops.plot(ax=ax, color="red", markersize=30)
 
-# 手动创建图例
+# Create the legend
 legend_elements = []
 if len(tube_stations) > 0:
     legend_elements.append(mlines.Line2D([], [], color="blue", marker="o", linestyle="None", markersize=10, label="Tube Stations"))
 if len(shops) > 0:
     legend_elements.append(mlines.Line2D([], [], color="red", marker="o", linestyle="None", markersize=8, label="Shops"))
 
-# 添加图例
 if legend_elements:
     ax.legend(handles=legend_elements)
 
 plt.title("King’s Cross: Shops & Tube Stations")
 plt.show()
-
 ```
 
-    ✅ 读取已有的 POI 数据
-    
-
 
     
-![png](formative%20assessment_files/formative%20assessment_9_1.png)
+![png](output_9_0.png)
     
 
 
 4. Discussion
 
-The analysis reveals a strong correlation between retail locations and high closeness and betweenness centrality. Retail establishments are more likely to be found in areas that are highly accessible within the street network, as these locations facilitate greater pedestrian movement. Additionally, proximity to tube stations appears to be a significant factor in retail distribution patterns, with businesses clustering around key transit points to maximize foot traffic. The use of network centrality measures provides valuable insights into the spatial structure of King's Cross, highlighting how urban accessibility shapes commercial activity.
+Shops are more likely to be in places that are easy to reach and have a lot of people passing through. Streets with high centrality scores help people move quickly, making them attractive for businesses. The study also shows that shops are often close to tube stations. This is because these areas have more people walking by, increasing the chances of customers stopping in.
 
-If asked to place a shop to maximize footfall, the optimal location would be in areas with high betweenness and closeness centrality, particularly near major intersections of pedestrian pathways and close to tube stations. These locations naturally experience a high volume of foot traffic, ensuring maximum visibility and accessibility for potential customers. Additionally, placing a shop near transit hubs would cater to both local commuters and visitors, further enhancing business opportunities.
-The analysis reveals a strong correlation between retail locations and high closeness and betweenness centrality. Retail establishments are more likely to be found in areas that are highly accessible within the street network, as these locations facilitate greater pedestrian movement. Additionally, proximity to tube stations appears to be a significant factor in retail distribution patterns, with businesses clustering around key transit points to maximize foot traffic. The use of network centrality measures provides valuable insights into the spatial structure of King's Cross, highlighting how urban accessibility shapes commercial activity.
+If someone wants to open a new shop and get the most foot traffic, they should choose a spot on a busy street with high centrality. The best places are near major intersections where many pedestrians pass. Being close to a tube station would also help bring in both commuters and visitors. These locations ensure that the shop is easy to find and attracts more customers.
 
 5. Conclusion
 
-This study provides a spatial analysis of King’s Cross, demonstrating how network centrality and transit access influence retail location choices. The findings suggest that areas with high accessibility and proximity to tube stations attract a greater concentration of commercial activity. These insights contribute to a broader understanding of urban planning and pedestrian movement. Future research could integrate foot traffic data to validate the findings further and explore additional factors influencing retail location dynamics.
-This study provides a spatial analysis of King’s Cross, demonstrating how network centrality and transit access influence retail location choices. Future work could integrate foot traffic data to validate findings further.
+This study looks at how street networks affect movement and shop locations in King’s Cross. The results show that the busiest streets and areas near tube stations are the best places for shops. These areas get the most foot traffic, which is important for businesses. Future studies could include real-world foot traffic data to confirm these findings and get a clearer picture of how people move in the area.
 
+Reference
 
-```python
-
-```
+OpenStreetMap (OSM). (2024). OpenStreetMap Data. Retrieved from https://www.openstreetmap.org
